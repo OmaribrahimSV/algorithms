@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genetic Algorithm Feature Selection | BIA601</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Global Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Color Variables */
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-light: #60a5fa;
+            --secondary: #64748b;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Section */
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding: 3rem 1rem;
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .project-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .project-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .meta-info {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .meta-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .meta-value {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* Team Grid */
+        .team-section {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .team-member {
+            padding: 1rem;
+            background: var(--background);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .team-member:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.1);
+        }
+
+        .member-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .member-id {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            background: var(--background);
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.03);
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            color: var(--text-secondary);
+        }
+
+        .upload-text {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-info {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(37, 99, 235, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .file-info.active {
+            display: block;
+        }
+
+        /* Settings Grid */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        input[type="number"],
+        select {
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: var(--surface);
+            transition: all 0.2s;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Button */
+        .btn-primary {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 1.5rem;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: var(--secondary);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* Loading State */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 3rem 2rem;
+            margin-top: 2rem;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Error Message */
+        .error {
+            display: none;
+            padding: 1rem;
+            margin-top: 1rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid var(--error);
+            border-radius: 8px;
+            color: var(--error);
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        /* Results Section */
+        .results {
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .results-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Metrics Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .metric-card {
+            background: var(--surface);
+            padding: 2rem 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        /* Charts Container */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .chart-card {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        /* Comparison Table */
+        .table-container {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            margin-bottom: 3rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: var(--background);
+        }
+
+        .highlight-row {
+            background: rgba(37, 99, 235, 0.05);
+            font-weight: 600;
+        }
+
+        /* Features Display */
+        .features-section {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .features-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .features-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .features-count {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .feature-tag {
+            padding: 0.75rem 1rem;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .feature-tag:hover {
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .all-methods-features {
+            margin-top: 3rem;
+        }
+
+        .method-features {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        .method-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .method-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .method-badge {
+            background: var(--background);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .project-title {
+                font-size: 1.5rem;
+            }
+
+            .meta-info {
+                gap: 1rem;
+            }
+
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+
+            .features-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1 class="project-title">Genetic Algorithm for Feature Selection</h1>
+            <p class="project-subtitle">Advanced optimization technique for dimensionality reduction</p>
+            
+            <div class="meta-info">
+                <div class="meta-item">
+                    <span class="meta-label">Course</span>
+                    <span class="meta-value">BIA601</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Supervisor</span>
+                    <span class="meta-value">Dr. Essam Salman</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Year</span>
+                    <span class="meta-value">2025</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Team Section -->
+        <div class="team-section">
+            <h2 class="section-title">Project Team</h2>
+            <div class="team-grid">
+                <div class="team-member">
+                    <div class="member-name">Yahea Lolo</div>
+                    <div class="member-id">yahea_110650 (C3)</div>
+                </div>
+                <div class="team-member">
+                    <div class="member-name">Osama Abdullah Hassan</div>
+                    <div class="member-id">osama_177061</div>
+                </div>
+                <div class="team-member">
+                    <div class="member-name">Obada Rudainy</div>
+                    <div class="member-id">Obada Rudainy</div>
+                </div>
+                <div class="team-member">
+                    <div class="member-name">Mhd Mazen Al-Subaie</div>
+                    <div class="member-id">Mhd_Mazen_214115 (C5)</div>
+                </div>
+                <div class="team-member">
+                    <div class="member-name">Omar Zuhair Al-Ibrahim</div>
+                    <div class="member-id">Omar_197112</div>
+                </div>
+                <div class="team-member">
+                    <div class="member-name">Mhd Hussam Ahmad Dawood</div>
+                    <div class="member-id">husam_200092</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2 class="section-title">Upload Dataset</h2>
+            
+            <div class="upload-area" id="uploadBox" onclick="document.getElementById('fileInput').click()">
+                <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <div class="upload-text">Drop your CSV file here or click to browse</div>
+                <div class="upload-hint">Maximum file size: 50MB</div>
+            </div>
+            
+            <input type="file" id="fileInput" accept=".csv" />
+            
+            <div class="file-info" id="fileInfo"></div>
+
+            <!-- Algorithm Settings -->
+            <div class="settings-grid">
+                <div class="input-group">
+                    <label class="input-label">Population Size</label>
+                    <input type="number" id="populationSize" value="30" min="20" max="100" />
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Generations</label>
+                    <input type="number" id="generations" value="20" min="10" max="50" />
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Mutation Rate</label>
+                    <input type="number" id="mutationRate" value="0.1" min="0" max="0.3" step="0.05" />
+                </div>
+            </div>
+
+            <button class="btn-primary" id="analyzeBtn" onclick="analyzeFile()" disabled>
+                Start Analysis
+            </button>
+
+            <div class="error" id="errorMsg"></div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p class="loading-text">Processing your data... Please wait</p>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results" id="results">
+            <div class="results-header">
+                <h2 class="results-title">Analysis Results</h2>
+            </div>
+
+            <!-- Metrics -->
+            <div class="metrics-grid" id="metricsGrid"></div>
+
+            <!-- Charts -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3 class="chart-title">Accuracy Comparison</h3>
+                    <canvas id="accuracyChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">Feature Count Comparison</h3>
+                    <canvas id="featuresChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="table-container">
+                <h3 class="chart-title">Methods Comparison</h3>
+                <table id="comparisonTable"></table>
+            </div>
+
+            <!-- Selected Features -->
+            <div class="features-section">
+                <div class="features-header">
+                    <h3 class="features-title">Selected Features by Genetic Algorithm</h3>
+                    <span class="features-count" id="gaFeaturesCount">0</span>
+                </div>
+                <div class="features-grid" id="gaFeaturesList"></div>
+            </div>
+
+            <!-- All Methods Features -->
+            <div class="all-methods-features" id="allMethodsFeatures"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        const fileInput = document.getElementById('fileInput');
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInfo = document.getElementById('fileInfo');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const errorMsg = document.getElementById('errorMsg');
+
+        let selectedFile = null;
+        let accuracyChart = null;
+        let featuresChart = null;
+
+        // Drag and drop handlers
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.classList.add('dragover');
+        });
+
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.classList.remove('dragover');
+        });
+
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        // Handle file selection
+        function handleFileSelect(file) {
+            if (!file.name.endsWith('.csv')) {
+                showError('Please upload a CSV file');
+                return;
+            }
+
+            selectedFile = file;
+            fileInfo.innerHTML = `
+                <strong>File:</strong> ${file.name} | 
+                <strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB
+            `;
+            fileInfo.classList.add('active');
+            
+            // Get columns from file
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            fetch('/get_columns', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                
+                fileInfo.innerHTML += ` | <strong>Rows:</strong> ${data.n_rows} | <strong>Columns:</strong> ${data.n_cols}`;
+                analyzeBtn.disabled = false;
+            })
+            .catch(error => {
+                showError('Error reading file: ' + error.message);
+            });
+        }
+
+        // Show error message
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.classList.add('active');
+            setTimeout(() => {
+                errorMsg.classList.remove('active');
+            }, 5000);
+        }
+
+        // Analyze file - Auto-detect target column (last column)
+        function analyzeFile() {
+            if (!selectedFile) {
+                showError('Please select a file first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('target_column', ''); // Auto-detect (backend will use last column)
+            formData.append('population_size', document.getElementById('populationSize').value);
+            formData.append('generations', document.getElementById('generations').value);
+            formData.append('mutation_rate', document.getElementById('mutationRate').value);
+
+            loading.classList.add('active');
+            results.classList.remove('active');
+            analyzeBtn.disabled = true;
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.classList.remove('active');
+                analyzeBtn.disabled = false;
+
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                displayResults(data);
+            })
+            .catch(error => {
+                loading.classList.remove('active');
+                analyzeBtn.disabled = false;
+                showError('Processing error: ' + error.message);
+            });
+        }
+
+        // Display results with charts
+        function displayResults(data) {
+            results.classList.add('active');
+            results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Display metrics
+            const metricsGrid = document.getElementById('metricsGrid');
+            const reductionPercent = ((1 - data.genetic_algorithm.n_features / data.data_info.n_features) * 100).toFixed(1);
+            
+            metricsGrid.innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-value">${(data.genetic_algorithm.accuracy * 100).toFixed(2)}%</div>
+                    <div class="metric-label">Accuracy</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${data.genetic_algorithm.n_features}</div>
+                    <div class="metric-label">Selected Features</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${reductionPercent}%</div>
+                    <div class="metric-label">Reduction</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${data.data_info.n_features}</div>
+                    <div class="metric-label">Total Features</div>
+                </div>
+            `;
+
+            // Create Accuracy Chart
+            createAccuracyChart(data);
+
+            // Create Features Chart
+            createFeaturesChart(data);
+
+            // Display comparison table
+            displayComparisonTable(data);
+
+            // Display GA selected features
+            displayGAFeatures(data);
+
+            // Display all methods features
+            displayAllMethodsFeatures(data);
+        }
+
+        // Create accuracy comparison chart
+        function createAccuracyChart(data) {
+            const ctx = document.getElementById('accuracyChart');
+            
+            if (accuracyChart) {
+                accuracyChart.destroy();
+            }
+
+            accuracyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.comparison.methods,
+                    datasets: [{
+                        label: 'Accuracy',
+                        data: data.comparison.accuracies.map(acc => (acc * 100).toFixed(2)),
+                        backgroundColor: [
+                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(100, 116, 139, 0.6)',
+                            'rgba(100, 116, 139, 0.6)',
+                            'rgba(100, 116, 139, 0.6)',
+                            'rgba(100, 116, 139, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgb(37, 99, 235)',
+                            'rgb(100, 116, 139)',
+                            'rgb(100, 116, 139)',
+                            'rgb(100, 116, 139)',
+                            'rgb(100, 116, 139)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Create features count chart
+        function createFeaturesChart(data) {
+            const ctx = document.getElementById('featuresChart');
+            
+            if (featuresChart) {
+                featuresChart.destroy();
+            }
+
+            featuresChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.comparison.methods,
+                    datasets: [{
+                        label: 'Number of Features',
+                        data: data.comparison.n_features,
+                        backgroundColor: [
+                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(100, 116, 139, 0.6)',
+                            'rgba(100, 116, 139, 0.6)',
+                            'rgba(100, 116, 139, 0.6)',
+                            'rgba(100, 116, 139, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgb(37, 99, 235)',
+                            'rgb(100, 116, 139)',
+                            'rgb(100, 116, 139)',
+                            'rgb(100, 116, 139)',
+                            'rgb(100, 116, 139)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Display comparison table
+        function displayComparisonTable(data) {
+            const table = document.getElementById('comparisonTable');
+            let html = `
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Accuracy</th>
+                        <th>Features</th>
+                        <th>Reduction</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            for (let i = 0; i < data.comparison.methods.length; i++) {
+                const reduction = ((1 - data.comparison.n_features[i] / data.data_info.n_features) * 100).toFixed(1);
+                const isGA = i === 0;
+                html += `
+                    <tr ${isGA ? 'class="highlight-row"' : ''}>
+                        <td><strong>${data.comparison.methods[i]}</strong></td>
+                        <td>${(data.comparison.accuracies[i] * 100).toFixed(2)}%</td>
+                        <td>${data.comparison.n_features[i]}</td>
+                        <td>${reduction}%</td>
+                    </tr>
+                `;
+            }
+
+            html += '</tbody>';
+            table.innerHTML = html;
+        }
+
+        // Display GA selected features
+        function displayGAFeatures(data) {
+            const features = data.genetic_algorithm.feature_names;
+            document.getElementById('gaFeaturesCount').textContent = features.length;
+            
+            const container = document.getElementById('gaFeaturesList');
+            container.innerHTML = features.map(feature => 
+                `<div class="feature-tag">${feature}</div>`
+            ).join('');
+        }
+
+        // Display all methods features
+        function displayAllMethodsFeatures(data) {
+            const container = document.getElementById('allMethodsFeatures');
+            const methods = ['f_test', 'mutual_info', 'rfe', 'model_based'];
+            const methodNames = ['F-Test', 'Mutual Information', 'RFE', 'Model-Based'];
+            
+            let html = '';
+            methods.forEach((method, index) => {
+                if (data[method] && data[method].feature_names) {
+                    const features = data[method].feature_names;
+                    html += `
+                        <div class="method-features">
+                            <div class="method-header">
+                                <h4 class="method-name">${methodNames[index]}</h4>
+                                <span class="method-badge">${features.length} features</span>
+                            </div>
+                            <div class="features-grid">
+                                ${features.map(f => `<div class="feature-tag">${f}</div>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
